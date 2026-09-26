@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "id": "liquidbounce-ultralight-gametest",
+  "version": "1.0.0",
+  "name": "LiquidBounce Ultralight Game Tests",
+  "license": "GPL-3.0-or-later",
+  "environment": "client",
+  "entrypoints": {
+    "fabric-client-gametest": [
+      "net.ccbluex.liquidbounce.ultralight.gametest.UltralightGameTest"
+    ]
+  },
+  "depends": {
+    "liquidbounce-ultralight": "*",
+    "fabric-client-gametest-api-v1": "*"
+  }
+}

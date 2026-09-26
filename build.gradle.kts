@@ -28,8 +28,30 @@ repositories {
     }
 }
 
+// `./gradlew runClientGameTest` starts the client with the add-on and runs src/gametest.
 loom {
-    accessWidenerPath = file("src/main/resources/example-addon.accesswidener")
+    accessWidenerPath = file("src/main/resources/liquidbounce-ultralight.accesswidener")
+}
+
+fabricApi {
+    configureTests {
+        createSourceSet = true
+        modId = "liquidbounce-ultralight-gametest"
+        enableGameTests = false
+    }
+}
+
+loom.runs.named("clientGameTest") {
+    // A loader error would otherwise wait on a dialog nobody sees; the client's own fatal errors go to
+    // the log when CI is set.
+    systemProperties.put("fabric.noGui", "true")
+    environmentVars.put("CI", "true")
+}
+
+// The run directory is wiped before every run and the client then downloads Ultralight into it. Point it at a
+// directory to keep the download in, which gets an `ultralight` folder: -Pgametest.libraries=$HOME/.cache/lb
+tasks.named<JavaExec>("runClientGameTest") {
+    providers.gradleProperty("gametest.libraries").orNull?.let { environment("LB_BROWSER_LIBRARIES", it) }
 }
 
 // Two things to leave alone here:
@@ -49,6 +71,12 @@ dependencies {
 
     // The client itself; there is no separate API artifact.
     implementation(libs.liquidbounce)
+
+    // Ultralight's own libraries are not bundled, its license only lets LiquidBounce download them
+    implementation(libs.ujr.core)
+    implementation(libs.ujr.platform.jni)
+    include(libs.ujr.core)
+    include(libs.ujr.platform.jni)
 }
 
 // Gradle keeps a resolved snapshot for a day; the client publishes one on every push to nextgen.
@@ -99,6 +127,8 @@ kotlin {
         jvmToolchain(libs.versions.jdk.get().toInt())
         // LiquidBounce is compiled with preview features, which marks its classes as pre-release
         freeCompilerArgs.add("-Xskip-prerelease-check")
+        // As in LiquidBounce, whose API uses them
+        freeCompilerArgs.add("-Xcompanion-blocks-and-extensions")
     }
 }
 

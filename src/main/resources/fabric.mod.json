@@ -1,29 +1,25 @@
 {
   "schemaVersion": 1,
-  "id": "example-addon",
+  "id": "liquidbounce-ultralight",
   "version": "${version}",
-  "name": "Example Addon",
-  "description": "An add-on template for LiquidBounce add-ons.",
+  "name": "LiquidBounce Ultralight",
+  "description": "Lets you show the client's menus with Ultralight, an alternative browser engine, instead of the built-in Chromium.",
   "authors": [
-    "You"
+    "CCBlueX"
   ],
   "contact": {
     "homepage": "https://liquidbounce.net/",
-    "sources": "https://github.com/CCBlueX/LiquidBounce-Addon-Template",
-    "issues": "https://github.com/CCBlueX/LiquidBounce-Addon-Template/issues"
+    "sources": "https://github.com/CCBlueX/LiquidBounce-Addon-Ultralight",
+    "issues": "https://github.com/CCBlueX/LiquidBounce-Addon-Ultralight/issues"
   },
   "license": "GPL-3.0-or-later",
-  "icon": "resources/example-addon/icon.png",
   "environment": "client",
   "entrypoints": {
     "liquidbounce": [
-      "com.example.addon.ExampleAddon"
+      "net.ccbluex.liquidbounce.ultralight.UltralightAddon"
     ]
   },
-  "mixins": [
-    "example-addon.mixins.json"
-  ],
-  "accessWidener": "example-addon.accesswidener",
+  "accessWidener": "liquidbounce-ultralight.accesswidener",
   "depends": {
     "minecraft": "~${minecraft_version}",
     "fabricloader": ">=${loader_version}",
@@ -32,7 +28,7 @@
   },
   "custom": {
     "liquidbounce": {
-      "color": "#FF5555"
+      "color": "#4A90E2"
     },
     "modmenu": {
       "parent": "liquidbounce"
