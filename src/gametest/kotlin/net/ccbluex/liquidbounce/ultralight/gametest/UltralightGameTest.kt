@@ -4,7 +4,9 @@ import com.mojang.blaze3d.platform.InputConstants
 import net.ccbluex.liquidbounce.integration.backend.BrowserBackendManager
 import net.ccbluex.liquidbounce.integration.backend.BrowserSelectionScreen
 import net.ccbluex.liquidbounce.integration.backend.browser.BrowserState
+import net.ccbluex.liquidbounce.integration.screen.CustomScreenType
 import net.ccbluex.liquidbounce.integration.screen.ScreenManager
+import net.ccbluex.liquidbounce.integration.screen.impl.CustomStandaloneMinecraftScreen
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
 import net.ccbluex.liquidbounce.ultralight.UltralightBrowserBackend
 import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest
@@ -41,6 +43,31 @@ class UltralightGameTest : FabricClientGameTest {
         // The title page animates in
         context.waitTicks(60)
         context.takeScreenshot("Title")
+
+        // The real ClickGUI keybind opens a standalone screen with its own browser, next to the still-alive
+        // main menu browser, not the shared one the title page ran in.
+        context.client { client ->
+            client.gui.setScreen(CustomStandaloneMinecraftScreen(CustomScreenType.CLICK_GUI))
+        }
+        context.waitFor({ (it.gui.screen() as? CustomStandaloneMinecraftScreen)?.browser?.state is BrowserState.Success }, 20 * 60)
+        context.waitTicks(60)
+        context.takeScreenshot("ClickGui")
+
+        // Expand the Combat category through its "+" toggle button, Minecraft drops the first move of the cursor
+        context.input.setCursorPos(248.0, 89.0)
+        context.input.setCursorPos(249.0, 90.0)
+        context.waitTicks(5)
+        context.input.pressMouse(InputConstants.MOUSE_BUTTON_LEFT)
+        context.waitTicks(20)
+        context.takeScreenshot("CombatExpanded")
+
+        // Right click the first module row to open its settings, like Module.svelte's contextmenu listener expects
+        context.input.setCursorPos(144.0, 128.0)
+        context.input.setCursorPos(145.0, 129.0)
+        context.waitTicks(5)
+        context.input.pressMouse(InputConstants.MOUSE_BUTTON_RIGHT)
+        context.waitTicks(20)
+        context.takeScreenshot("ModuleSettings")
 
         // The test has to end on the game's own title screen, which the client only keeps in basic mode
         context.client { client ->

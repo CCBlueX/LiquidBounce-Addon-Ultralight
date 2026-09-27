@@ -18,6 +18,7 @@ import net.janrupf.ujr.api.UltralightSession
 import net.janrupf.ujr.api.UltralightView
 import net.janrupf.ujr.api.UltralightViewConfigBuilder
 import net.janrupf.ujr.api.cursor.UlCursor
+import net.janrupf.ujr.api.event.UlMouseButton
 import net.janrupf.ujr.api.event.UlScrollEventType
 import net.janrupf.ujr.api.listener.UlMessageLevel
 import net.janrupf.ujr.api.listener.UlMessageSource
@@ -63,6 +64,19 @@ document.addEventListener('DOMContentLoaded', () => {
     `;
     document.head.appendChild(style);
 });
+"""
+
+/**
+ * Unlike Chromium, Ultralight's WebCore never synthesizes a `contextmenu` DOM event from a right-click, so a
+ * right release has to dispatch it itself for the page's own `contextmenu` listeners to see it at all.
+ */
+private fun contextMenuScript(x: Int, y: Int) = """
+(() => {
+    const target = document.elementFromPoint($x, $y) ?? document.body;
+    target.dispatchEvent(new MouseEvent('contextmenu', {
+        bubbles: true, cancelable: true, view: window, clientX: $x, clientY: $y, button: 2
+    }));
+})();
 """
 
 /**
@@ -234,6 +248,10 @@ class UltralightBrowser internal constructor(
         val (x, y) = viewport.transformMouse(mouseX, mouseY, GlobalBrowserSettings.quality)
 
         view.fireMouseEvent(UltralightMouseEventBuilder.up(button).x(x).y(y).build())
+
+        if (button == UlMouseButton.RIGHT) {
+            view.evaluateScript(contextMenuScript(x, y))
+        }
     }
 
     override fun mouseMoved(mouseX: Double, mouseY: Double) {
