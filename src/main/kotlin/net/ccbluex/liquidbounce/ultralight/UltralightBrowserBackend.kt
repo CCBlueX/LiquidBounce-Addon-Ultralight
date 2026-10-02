@@ -2,7 +2,6 @@ package net.ccbluex.liquidbounce.ultralight
 
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.event.EventListener
-import net.ccbluex.liquidbounce.integration.backend.BrowserAccelerationFlags
 import net.ccbluex.liquidbounce.integration.backend.BrowserBackend
 import net.ccbluex.liquidbounce.integration.backend.browser.BrowserSettings
 import net.ccbluex.liquidbounce.integration.backend.browser.BrowserViewport
@@ -61,7 +60,6 @@ class UltralightBrowserBackend : BrowserBackend, EventListener {
     override val isInitialized: Boolean
         get() = rendererInstance != null
     override val browsers = mutableListOf<UltralightBrowser>()
-    override var accelerationFlags = BrowserAccelerationFlags.UNSUPPORTED
     override val supportsIncognito = true
 
     override fun makeDependenciesAvailable(taskManager: TaskManager, whenAvailable: () -> Unit) {
