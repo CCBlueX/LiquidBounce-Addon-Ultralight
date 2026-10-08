@@ -16,9 +16,11 @@ fabric-kotlin = "1.14.1+kotlin.2.4.20"
 liquidbounce = "0.41.0+26.3"
 
 # Bundled into the add-on: the bindings, whose natives come with the Ultralight runtime
-ujr = "0.2.0"
+ujr = "0.3.0"
 # Bundled as well: decodes the LZMA2 of the Ultralight SDK, Minecraft only ships Commons Compress
 xz = "1.10"
+# Bundled as well: 7-Zip, for the BCJ2 the Linux and Windows SDKs pack their libraries with
+sevenzipjbinding = "16.02-2.01"
 
 [libraries]
 minecraft = { group = "com.mojang", name = "minecraft", version.ref = "minecraft" }
@@ -29,6 +31,9 @@ liquidbounce = { group = "net.ccbluex", name = "liquidbounce", version.ref = "li
 ujr-core = { group = "net.ccbluex.ultralight", name = "ultralight-java-reborn-core", version.ref = "ujr" }
 ujr-platform-jni = { group = "net.ccbluex.ultralight", name = "ultralight-java-reborn-platform-jni", version.ref = "ujr" }
 xz = { group = "org.tukaani", name = "xz", version.ref = "xz" }
+sevenzipjbinding = { group = "net.sf.sevenzipjbinding", name = "sevenzipjbinding", version.ref = "sevenzipjbinding" }
+sevenzipjbinding-linux = { group = "net.sf.sevenzipjbinding", name = "sevenzipjbinding-linux-amd64", version.ref = "sevenzipjbinding" }
+sevenzipjbinding-windows = { group = "net.sf.sevenzipjbinding", name = "sevenzipjbinding-windows-amd64", version.ref = "sevenzipjbinding" }
 
 [plugins]
 fabric-loom = { id = "net.fabricmc.fabric-loom", version.ref = "fabric-loom" }

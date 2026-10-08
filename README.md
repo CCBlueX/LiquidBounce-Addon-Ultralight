@@ -11,8 +11,9 @@ hold Shift while the client starts to choose again. `LB_BROWSER_BACKEND=ultralig
 |---|---|
 | ![Choosing the browser](docs/selection.png) | ![The title screen in Ultralight](docs/title.png) |
 
-Ultralight renders on the GPU through the game's own renderer, on OpenGL and Vulkan. Its SDK is downloaded from
-Ultralight on the first start. The bindings are [Ultralight Java Reborn](https://github.com/CCBlueX/ultralight-java-reborn).
+Ultralight 2.0 renders on the GPU through the game's own renderer, on OpenGL and Vulkan, and draws paths and text
+with Photon. It runs on Linux and Windows x64 and on Apple Silicon. Its SDK is downloaded from Ultralight on the first
+start. The bindings are [Ultralight Java Reborn](https://github.com/CCBlueX/ultralight-java-reborn).
 
 ## Building
 
@@ -25,6 +26,6 @@ the screenshots above.
 
 ## License
 
-The add-on is licensed under the GPL 3.0 or later, see [LICENSE](LICENSE). Its shaders are ported from Ultralight's
-[AppCore](https://github.com/ultralight-ux/AppCore) (LGPL 2.1). Ultralight itself is © Ultralight, Inc. and used under
-its license.
+The add-on is licensed under the GPL 3.0 or later, see [LICENSE](LICENSE). It bundles
+[7-Zip-JBinding](https://sevenzipjbind.sourceforge.net) (LGPL 2.1 with the unRAR restriction) to unpack the SDK.
+Ultralight itself, including the shaders the add-on draws with, is © Ultralight, Inc. and used under its license.

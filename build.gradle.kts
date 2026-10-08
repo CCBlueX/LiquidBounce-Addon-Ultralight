@@ -76,9 +76,15 @@ dependencies {
     implementation(libs.ujr.core)
     implementation(libs.ujr.platform.jni)
     implementation(libs.xz)
+    implementation(libs.sevenzipjbinding)
+    runtimeOnly(libs.sevenzipjbinding.linux)
+    runtimeOnly(libs.sevenzipjbinding.windows)
     include(libs.ujr.core)
     include(libs.ujr.platform.jni)
     include(libs.xz)
+    include(libs.sevenzipjbinding)
+    include(libs.sevenzipjbinding.linux)
+    include(libs.sevenzipjbinding.windows)
 }
 
 // Gradle keeps a resolved snapshot for a day; the client publishes one on every push to nextgen.

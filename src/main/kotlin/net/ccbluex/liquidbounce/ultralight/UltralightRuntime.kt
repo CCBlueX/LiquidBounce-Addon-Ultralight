@@ -3,8 +3,18 @@ package net.ccbluex.liquidbounce.ultralight
 import com.google.gson.JsonParser
 import net.ccbluex.liquidbounce.integration.task.type.Task
 import net.ccbluex.liquidbounce.utils.client.env
+import net.sf.sevenzipjbinding.ArchiveFormat
+import net.sf.sevenzipjbinding.ExtractAskMode
+import net.sf.sevenzipjbinding.ExtractOperationResult
+import net.sf.sevenzipjbinding.IArchiveExtractCallback
+import net.sf.sevenzipjbinding.ISequentialOutStream
+import net.sf.sevenzipjbinding.PropID
+import net.sf.sevenzipjbinding.SevenZip
+import net.sf.sevenzipjbinding.impl.RandomAccessFileInStream
 import org.apache.commons.compress.archivers.sevenz.SevenZFile
 import java.io.File
+import java.io.OutputStream
+import java.io.RandomAccessFile
 import java.net.URI
 import java.net.URLEncoder
 import java.net.http.HttpClient
@@ -40,16 +50,21 @@ internal class UltralightRuntime(folder: File) {
             else -> return@run null
         }
 
-        // Ultralight has no build for Windows on ARM
-        if (osName == "win" && archName == "arm64") null else "$osName-$archName"
+        "$osName-$archName".takeIf { it in PLATFORMS }
     }
 
     private val directory = folder.resolve(ULTRALIGHT_VERSION)
 
     /**
-     * The runtime with `bin/`, `resources/` and `license/`.
+     * The runtime with `bin/`, `resources/`, `license/` and the GLSL shaders of the SDK.
      */
     val runtimeDirectory = directory.resolve("runtime")
+
+    /**
+     * The shaders of Ultralight's GPU drivers, as C++ headers. They may only be used with Ultralight, so they are
+     * read from the SDK instead of being shipped with the add-on.
+     */
+    val shaderDirectory = runtimeDirectory.resolve("platform/shaders/generated/headers/glsl")
 
     /**
      * The natives jar of Ultralight Java Reborn, which can be replaced for development.
@@ -69,7 +84,8 @@ internal class UltralightRuntime(folder: File) {
 
     fun download(task: Task) {
         val platform = requireNotNull(platform) {
-            "Ultralight doesn't support ${System.getProperty("os.name")} on ${System.getProperty("os.arch")}"
+            "Ultralight $ULTRALIGHT_VERSION doesn't support ${System.getProperty("os.name")} on " +
+                System.getProperty("os.arch")
         }
 
         directory.deleteRecursively()
@@ -128,21 +144,91 @@ internal class UltralightRuntime(folder: File) {
 
     /**
      * Unpacks what runs Ultralight from the SDK, which also holds headers, samples and tools.
+     *
+     * The Linux and Windows SDKs pack their libraries with BCJ2, which only 7-Zip itself decodes. 7-Zip-JBinding has no
+     * build for Apple Silicon, whose SDK Commons Compress reads.
      */
     private fun extractRuntime(archive: File, target: File) {
-        val root = target.canonicalFile
+        if (platform == "mac-arm64") {
+            extractWithCommonsCompress(archive, target.canonicalFile)
+        } else {
+            extractWith7Zip(archive, target.canonicalFile)
+        }
+    }
+
+    private fun extractWithCommonsCompress(archive: File, root: File) {
         SevenZFile.builder().setFile(archive).get().use { sevenZ ->
             while (true) {
                 val entry = sevenZ.nextEntry ?: break
-                if (entry.isDirectory || RUNTIME_FOLDERS.none { entry.name.startsWith(it) }) continue
+                if (entry.isDirectory) continue
 
-                val file = root.resolve(entry.name).canonicalFile
-                check(file.toPath().startsWith(root.toPath())) { "${entry.name} leaves the runtime directory" }
-
+                val file = runtimeFile(root, entry.name) ?: continue
                 file.parentFile.mkdirs()
                 sevenZ.getInputStream(entry).use { input -> file.outputStream().use { input.copyTo(it) } }
             }
         }
+    }
+
+    private fun extractWith7Zip(archive: File, root: File) {
+        // Named, as it would only look at the first of the bundled platforms otherwise. Unpacks its native library into
+        // the given directory.
+        SevenZip.initSevenZipFromPlatformJAR(if (platform == "win-x64") "Windows-amd64" else "Linux-amd64", directory)
+
+        RandomAccessFile(archive, "r").use { file ->
+            SevenZip.openInArchive(ArchiveFormat.SEVEN_ZIP, RandomAccessFileInStream(file)).use { sevenZ ->
+                val files = (0 until sevenZ.numberOfItems)
+                    .filterNot { sevenZ.getProperty(it, PropID.IS_FOLDER) as Boolean }
+                    .mapNotNull { index ->
+                        val name = sevenZ.getStringProperty(index, PropID.PATH).replace('\\', '/')
+                        runtimeFile(root, name)?.let { index to it }
+                    }
+                    .toMap()
+
+                sevenZ.extract(files.keys.toIntArray(), false, object : IArchiveExtractCallback {
+
+                    private var output: OutputStream? = null
+
+                    // 7-Zip also asks for the entries it decodes on the way through a solid block
+                    override fun getStream(index: Int, mode: ExtractAskMode): ISequentialOutStream? {
+                        val file = files[index]?.takeIf { mode == ExtractAskMode.EXTRACT } ?: return null
+                        file.parentFile.mkdirs()
+
+                        val stream = file.outputStream()
+                        output = stream
+                        return ISequentialOutStream { data ->
+                            stream.write(data)
+                            data.size
+                        }
+                    }
+
+                    override fun prepareOperation(mode: ExtractAskMode) = Unit
+
+                    override fun setOperationResult(result: ExtractOperationResult) {
+                        output?.close()
+                        output = null
+                        check(result == ExtractOperationResult.OK) { "Unpacking the Ultralight SDK failed: $result" }
+                    }
+
+                    override fun setTotal(total: Long) = Unit
+
+                    override fun setCompleted(complete: Long) = Unit
+
+                })
+            }
+        }
+    }
+
+    /**
+     * Finds where an entry of the SDK goes, or null if the runtime doesn't need it.
+     */
+    private fun runtimeFile(root: File, name: String): File? {
+        if (RUNTIME_ENTRIES.none { name.startsWith(it) }) {
+            return null
+        }
+
+        val file = root.resolve(name).canonicalFile
+        check(file.toPath().startsWith(root.toPath())) { "$name leaves the runtime directory" }
+        return file
     }
 
     private fun verify(file: File, expectedSha256: String) {
@@ -156,10 +242,18 @@ internal class UltralightRuntime(folder: File) {
         private const val HTTP_OK = 200
         private val http = HttpClient.newBuilder().followRedirects(HttpClient.Redirect.NORMAL).build()
 
-        const val ULTRALIGHT_VERSION = "1.4.0"
-        const val UJR_VERSION = "0.2.0"
+        const val ULTRALIGHT_VERSION = "2.0.0-beta.2"
+        const val UJR_VERSION = "0.3.0"
 
-        private val RUNTIME_FOLDERS = listOf("bin/", "resources/", "license/")
+        private val PLATFORMS = setOf("linux-x64", "mac-arm64", "win-x64")
+
+        private val RUNTIME_ENTRIES = listOf(
+            "bin/",
+            "resources/",
+            "license/",
+            "platform/shaders/generated/LICENSE",
+            "platform/shaders/generated/headers/glsl/"
+        )
 
         private const val SDK_API = "https://ultralig.ht/api/v1/sdk/download"
         private const val NATIVES_URL =

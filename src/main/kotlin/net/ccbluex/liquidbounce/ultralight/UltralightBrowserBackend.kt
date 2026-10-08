@@ -28,7 +28,8 @@ import java.net.URLClassLoader
 /**
  * A lightweight browser backend based on Ultralight, a WebKit based HTML renderer made for games.
  *
- * It renders on the CPU, runs in the game process and supports Apple Silicon and Linux ARM64.
+ * It renders on the GPU through the game's renderer and runs in the game process, on Linux and Windows x64 and on
+ * Apple Silicon.
  * Enabled with `LB_BROWSER_BACKEND=ultralight`, CEF stays the default.
  *
  * Ultralight is used under its end user license agreement, which comes with the downloaded runtime.
@@ -102,7 +103,7 @@ class UltralightBrowserBackend : BrowserBackend, EventListener {
         val environment = PlatformEnvironment.loadWith(UJRJniPlatformProviderFactory().create(options), options)
         ujr = UltralightJavaReborn(environment).apply { activate() }
 
-        UltralightPipelines.compile()
+        UltralightPipelines.load(runtime.shaderDirectory)
         val gpuDriver = UltralightGpuDriver()
         gpuDriverInstance = gpuDriver
 

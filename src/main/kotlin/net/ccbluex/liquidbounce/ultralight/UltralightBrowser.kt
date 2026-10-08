@@ -18,7 +18,6 @@ import net.janrupf.ujr.api.UltralightSession
 import net.janrupf.ujr.api.UltralightView
 import net.janrupf.ujr.api.UltralightViewConfigBuilder
 import net.janrupf.ujr.api.cursor.UlCursor
-import net.janrupf.ujr.api.event.UlMouseButton
 import net.janrupf.ujr.api.event.UlScrollEventType
 import net.janrupf.ujr.api.listener.UlMessageLevel
 import net.janrupf.ujr.api.listener.UlMessageSource
@@ -42,41 +41,6 @@ for (const name of ['HTMLMediaElement', 'HTMLAudioElement', 'HTMLVideoElement'])
         window[name] = class extends HTMLElement {};
     }
 }
-"""
-
-/**
- * Ultralight draws elements with a CSS mask blank on the GPU, so the theme's masked icons show their white image
- * instead, and hovered title buttons keep their accent background for it to stay visible. The masked enchantment glow
- * of items is left out.
- */
-private const val MASK_WORKAROUND_SCRIPT = """
-document.addEventListener('DOMContentLoaded', () => {
-    const style = document.createElement('style');
-    style.textContent = `
-        .title-button-icon, .category-icon { mask-image: none !important; background: none !important; }
-        .title-button-icon-size, .category-icon-size { visibility: visible !important; }
-        :root {
-            --menu-main-button-icon-hover-background-color: var(--accent-color) !important;
-            --menu-child-button-hover-background-color: var(--accent-color) !important;
-            --menu-child-button-hover-text-color: var(--menu-text-color) !important;
-        }
-        .item-stack .mask { display: none !important; }
-    `;
-    document.head.appendChild(style);
-});
-"""
-
-/**
- * Unlike Chromium, Ultralight's WebCore never synthesizes a `contextmenu` DOM event from a right-click, so a
- * right release has to dispatch it itself for the page's own `contextmenu` listeners to see it at all.
- */
-private fun contextMenuScript(x: Int, y: Int) = """
-(() => {
-    const target = document.elementFromPoint($x, $y) ?? document.body;
-    target.dispatchEvent(new MouseEvent('contextmenu', {
-        bubbles: true, cancelable: true, view: window, clientX: $x, clientY: $y, button: 2
-    }));
-})();
 """
 
 /**
@@ -193,7 +157,7 @@ class UltralightBrowser internal constructor(
             val textureSetup = backend.gpuDriver.textureSetup(target.textureId()) ?: return null
             val uv = target.uvCoords()
             return BrowserTexture(
-                textureSetup, viewport.width, viewport.height, true,
+                textureSetup, viewport.width, viewport.height, false,
                 uv.left, uv.top, uv.right, uv.bottom
             )
         }
@@ -248,10 +212,6 @@ class UltralightBrowser internal constructor(
         val (x, y) = viewport.transformMouse(mouseX, mouseY, GlobalBrowserSettings.quality)
 
         view.fireMouseEvent(UltralightMouseEventBuilder.up(button).x(x).y(y).build())
-
-        if (button == UlMouseButton.RIGHT) {
-            view.evaluateScript(contextMenuScript(x, y))
-        }
     }
 
     override fun mouseMoved(mouseX: Double, mouseY: Double) {
@@ -303,7 +263,6 @@ class UltralightBrowser internal constructor(
             // Runs before any script of the page
             if (isMainFrame) {
                 view.evaluateScript(MEDIA_ELEMENTS_SCRIPT)
-                view.evaluateScript(MASK_WORKAROUND_SCRIPT)
             }
         }
 
