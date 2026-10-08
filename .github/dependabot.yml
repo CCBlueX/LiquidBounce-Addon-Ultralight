@@ -1,0 +1,29 @@
+version: 2
+# Update jobs only reach the hosts declared here, the repositories in the Gradle build are not enough
+registries:
+  ccbluex-releases:
+    type: maven-repository
+    url: https://maven.ccbluex.net/releases
+  ccbluex-snapshots:
+    type: maven-repository
+    url: https://maven.ccbluex.net/snapshots
+  fabric:
+    type: maven-repository
+    url: https://maven.fabricmc.net
+updates:
+  - package-ecosystem: gradle
+    directory: "/"
+    registries: "*"
+    schedule:
+      interval: weekly
+    # These follow the LiquidBounce version the add-on targets, never ahead of it
+    ignore:
+      - dependency-name: net.fabricmc.fabric-loom
+      - dependency-name: net.fabricmc:fabric-loader
+      - dependency-name: net.fabricmc.fabric-api:fabric-api
+      - dependency-name: org.jetbrains.kotlin.jvm
+      - dependency-name: net.fabricmc:fabric-language-kotlin
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly

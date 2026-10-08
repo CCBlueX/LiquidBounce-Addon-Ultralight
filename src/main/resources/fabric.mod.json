@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "id": "liquidbounce-ultralight",
+  "version": "${version}",
+  "name": "LiquidBounce Ultralight",
+  "description": "Lets you show the client's menus with Ultralight, an alternative browser engine, instead of the built-in Chromium.",
+  "authors": [
+    "CCBlueX"
+  ],
+  "contact": {
+    "homepage": "https://liquidbounce.net/",
+    "sources": "https://github.com/CCBlueX/LiquidBounce-Addon-Ultralight",
+    "issues": "https://github.com/CCBlueX/LiquidBounce-Addon-Ultralight/issues"
+  },
+  "license": "GPL-3.0-or-later",
+  "environment": "client",
+  "entrypoints": {
+    "liquidbounce": [
+      "net.ccbluex.liquidbounce.ultralight.UltralightAddon"
+    ]
+  },
+  "accessWidener": "liquidbounce-ultralight.accesswidener",
+  "depends": {
+    "minecraft": "~${minecraft_version}",
+    "fabricloader": ">=${loader_version}",
+    "fabric-language-kotlin": ">=${fabric_kotlin_version}",
+    "liquidbounce": "*"
+  },
+  "custom": {
+    "liquidbounce": {
+      "color": "#4A90E2"
+    },
+    "modmenu": {
+      "parent": "liquidbounce"
+    }
+  }
+}

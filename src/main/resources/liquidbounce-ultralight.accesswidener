@@ -1,0 +1,6 @@
+accessWidener	v1	official
+
+# LiquidBounce's own access widener does NOT propagate to add-ons, widen what the add-on needs here.
+
+# The pages are drawn with pipelines of the add-on's own.
+accessible method com/mojang/renderpearl/api/pipeline/RenderPipeline$Builder <init> ()V
