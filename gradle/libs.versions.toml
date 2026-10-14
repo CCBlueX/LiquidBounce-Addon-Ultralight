@@ -18,7 +18,7 @@ liquidbounce = "0.41.0+26.3"
 # Bundled into the add-on: the bindings, whose natives come with the Ultralight runtime
 ujr = "0.3.0"
 # Bundled as well: decodes the LZMA2 of the Ultralight SDK, Minecraft only ships Commons Compress
-xz = "1.10"
+xz = "1.12"
 # Bundled as well: 7-Zip, for the BCJ2 the Linux and Windows SDKs pack their libraries with
 sevenzipjbinding = "16.02-2.01"
 
