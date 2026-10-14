@@ -20,7 +20,7 @@ ujr = "0.3.0"
 # Bundled as well: decodes the LZMA2 of the Ultralight SDK, Minecraft only ships Commons Compress
 xz = "1.10"
 # Bundled as well: 7-Zip, for the BCJ2 the Linux and Windows SDKs pack their libraries with
-sevenzipjbinding = "16.02-2.01"
+sevenzipjbinding = "23.01-2.2"
 
 [libraries]
 minecraft = { group = "com.mojang", name = "minecraft", version.ref = "minecraft" }
