@@ -8,11 +8,12 @@ import net.ccbluex.liquidbounce.integration.screen.CustomScreenType
 import net.ccbluex.liquidbounce.integration.screen.ScreenManager
 import net.ccbluex.liquidbounce.integration.screen.impl.CustomStandaloneMinecraftScreen
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager
+import net.ccbluex.liquidbounce.render.splash.Splash
+import net.ccbluex.liquidbounce.render.splash.SplashTimeline
 import net.ccbluex.liquidbounce.ultralight.UltralightBrowserBackend
 import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
 import net.minecraft.client.Minecraft
-import net.minecraft.client.gui.components.Button
 import net.minecraft.client.gui.screens.TitleScreen
 
 /**
@@ -24,15 +25,14 @@ class UltralightGameTest : FabricClientGameTest {
     override fun runTest(context: ClientGameTestContext) {
         context.input.resizeWindow(1600, 900)
 
-        // Nothing was picked yet, so the client asks before it loads either browser
-        context.waitFor({ it.gui.screen() is BrowserSelectionScreen }, 20 * 120)
+        // Nothing was picked yet, so the client asks before it loads either browser; it takes keys once its text shows
+        context.waitFor({ it.gui.screen() is BrowserSelectionScreen && Splash.isSettled(SplashTimeline.Phase.CHOICE) }, 20 * 120)
         context.waitTicks(20)
         context.takeScreenshot("Selection")
 
         // Picks Ultralight like a player would with the keyboard
-        context.client { client ->
-            val screen = client.gui.screen() as BrowserSelectionScreen
-            screen.setFocused(screen.children().filterIsInstance<Button>().single { it.message.string == "Ultralight" })
+        repeat(BrowserBackendManager.selectableBackends.indexOfFirst { it.name == "Ultralight" }) {
+            context.input.pressKey(InputConstants.KEY_DOWN)
         }
         context.input.pressKey(InputConstants.KEY_RETURN)
 
